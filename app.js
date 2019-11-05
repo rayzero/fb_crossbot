@@ -35,7 +35,7 @@ login({email: FB_EMAIL, password: FB_PWD}, (err, api) => {
 		if (message && message.body) {
 
 			console.log( "Sending from: " + message.senderID);
-			console.log( "Message body: " + mesage.body );
+			console.log( "Message body: " + message.body );
 
 			if ( !message.body )
 			{
@@ -48,7 +48,7 @@ login({email: FB_EMAIL, password: FB_PWD}, (err, api) => {
 				printLeaderboard();
 				return;
 			}
-			name  = getName( message.senderID );
+			name  = getName( api, message.senderID );
 			time_in_s = timeParser( message.body );
 			time_str = timeToString( time_in_s );
 			if ( !name || !time_in_s || !time_str )
@@ -79,15 +79,18 @@ function insert(str, index, value) {
 
 function getName( api, ID )
 {
-	api.getUserInfo([message.senderID], (err, ret) => {
+	var name = "";
+	api.getUserInfo([ID], (err, ret) => {
 		if(err) return console.error(err);
-		name = ret[message.senderID].name;
+		name = ret[ID].name;
+		console.log( "Found name: "+name );
 		if ( !name )
 		{
 			console.log( "Unknown sender\n");
 			name = "Unknown";
 		}
-		api.sendMessage( { body: ret[message.senderID].name }, message.senderID);
+		
+		api.sendMessage( { body: ret[ID].name }, ID);
 	});
 	return name;
 
