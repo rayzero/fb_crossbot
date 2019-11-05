@@ -25,53 +25,72 @@ login({email: FB_EMAIL, password: FB_PWD}, (err, api) => {
 	var times = {};
 
 	api.listen((err, message) => {
-		var name = "";
-		var time_in_s = 0;
-		var time_str = "";
-		var info = { };
-
 		console.log( "Received a message\n" );
 
-		if (message && message.body) {
+        if (!validTime()) {
+            return;
+        }
 
-			console.log( "Sending from: " + message.senderID);
-			console.log( "Message body: " + message.body );
-
-			if ( !message.body )
-			{
-				console.log( "Nothing in this message...\n" );
-				return;
-			}
-			if( message.body == "/" )
-			{
-				console.log( "Request to show leaderboard\n" );
-				printLeaderboard();
-				return;
-			}
-			name  = getName( api, message.senderID );
-			time_in_s = timeParser( message.body );
-			time_str = timeToString( time_in_s );
-			if ( !name || !time_in_s || !time_str )
-			{
-				console.log( "Bad inputs\n" );
-				return;
-			}
-			if ( times[name] )
-			{
-				times[name].time_in_s = time_in_s;
-				times[name].time_str = time_str;
-			}
-			else
-			{
-				info.time_in_s = time_in_s;
-				info.time_str= time_str;
-				times[name] = info;
-			}
-			// TODO: reinit times dict based on 20 hour period
-			console.log( name + "Finished in " + time_in_s );
+		if (!message || !message.body) {
+            return;
 		}
+
+        handleMessage(message, times);
 	});
 });
+
+// checks that we're within curday 7pm <-->curday+1 3pm so we can store a time
+function validTime() {
+    // todo: write logic
+    return true;
+}
+
+// handles different functions based off what messsage is read in
+function handleMessage(message, times) {
+    console.log( "Sending from: " + message.senderID);
+    console.log( "Message body: " + message.body );
+
+    if ( !message.body )
+    {
+        console.log( "Nothing in this message...\n" );
+        return;
+    }
+    if( message.body == "/" )
+    {
+        console.log( "Request to show leaderboard\n" );
+        printLeaderboard();
+        return;
+    }
+
+    storeLeaderboard(message, times);
+}
+
+// attempts to parse message into a time and store into our leaderboard object
+function storeLeaderboard(message, times) {
+    var name = "";
+    var time_in_s = 0;
+    var time_str = "";
+    var info = { };
+
+    name = getName( api, message.senderID );
+    time_in_s = timeParser( message.body );
+    time_str = timeToString( time_in_s );
+    if ( !name || !time_in_s || !time_str ) {
+        console.log( "Bad inputs\n" );
+        return;
+    }
+    if ( times[name] ) {
+        times[name].time_in_s = time_in_s;
+        times[name].time_str = time_str;
+    }
+    else {
+        info.time_in_s = time_in_s;
+        info.time_str= time_str;
+        times[name] = info;
+    }
+    // TODO: reinit times dict based on 20 hour period
+    console.log( name + "Finished in " + time_in_s );
+}
 
 function insert(str, index, value) {
 	return str.substr(0, index) + value + str.substr(index);
@@ -84,8 +103,7 @@ function getName( api, ID )
 		if(err) return console.error(err);
 		name = ret[ID].name;
 		console.log( "Found name: "+name );
-		if ( !name )
-		{
+		if ( !name ) {
 			console.log( "Unknown sender\n");
 			name = "Unknown";
 		}
@@ -96,6 +114,7 @@ function getName( api, ID )
 
 }
 
+// regex for time parsing
 function timeParser ( messageBody )
 {
 	var time_re = "^(?:([0-9]*):)?([0-9]*)$";
