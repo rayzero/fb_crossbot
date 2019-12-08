@@ -22,6 +22,14 @@ const login = require("facebook-chat-api");
 // times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
 var times = {};
 
+function print_dict( dict )
+{
+   for( var key in dict )
+   {
+     console.log( key + ': ' + dict[key]+'\n');
+   }
+}
+
 function updateTimes(id, name, time_in_s, time_str) {
     times[id] = {
         'name': name,
@@ -84,7 +92,7 @@ function handleMessage(message, times, api) {
     {
         var threadID = message.threadID;
         console.log( "Request to show leaderboard\n" );
-        printLeaderboard(threadID);
+        printLeaderboard(api, threadID);
         return;
     }
 
@@ -109,15 +117,6 @@ function storeLeaderboard(message, times, api) {
             console.log( "Bad inputs\n" );
             return;
         }
-        if ( times[name] ) {
-            times[name].time_in_s = time_in_s;
-            times[name].time_str = time_str;
-        }
-        else {
-            info.time_in_s = time_in_s;
-            info.time_str= time_str;
-            times[name] = info;
-        }
         // TODO: reinit times dict based on 20 hour period
         complete_str_to_send = name + " finished in " + time_in_s + " seconds."
         console.log(complete_str_to_send);
@@ -141,7 +140,7 @@ function getName( api, ID,  cb )
 			console.log( "Unknown sender\n");
 			name = "Unknown";
 		}
-		
+
 		api.sendMessage( { body: ret[ID].name }, ID);
         cb(name)
 	});
@@ -159,19 +158,24 @@ function timeParser(timeStr) {
     return minute*60 + second;
 }
 
-function printLeaderboard(threadID)
+function printLeaderboard( api, threadID )
 {
+    console.log( "times:" )
+    print_dict( times );
     sortedTimes = []
-    for (var key in dictionary) {
+    for (var key in times) {
         value = times[key]
         sortedTimes.push(value)
     }
+    console.log( "sortedTimes:" )
     sortedTimes.sort(compareTimes);
+    console.log( "sorted times length " + sortedTimes.length );
 
     leaderboardBody = ""
     for (i = 0; i < sortedTimes.length; i++) {
-        singleTimeStr = '${i+1}. ${sortedTimes[i].name} @ ${sortedTimes[i].time_in_s}\n'
-        sortedTimes += single_time_str
+        singleTimeStr = (i+1) + '. ' + sortedTimes[i].name +' @ ' + sortedTimes[i].time_str + '\n'
+	console.log( singleTimeStr );
+        leaderboardBody += singleTimeStr
     }
 
     api.sendMessage({body: leaderboardBody}, threadID)
