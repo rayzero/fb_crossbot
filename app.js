@@ -18,13 +18,31 @@ const login = require("facebook-chat-api");
 // const FB_EMAIL = "normanmarsh916@outlook.com";
 // const FB_PWD = "~yKV*Mymy^nVd.9D-J&Wce3V";
 
+// map each person's name to their time in int (for sorting) and string (for printing)
+// times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
+var times = {};
+
+function updateTimes(id, name, time_in_s, time_str) {
+    times[id] = {
+        'name': name,
+        'time_in_s': time_in_s,
+        'time_str': time_str
+    }
+}
+
+function compareTimes(a, b) {
+    if (a.time_in_s > b.time_in_s) {
+        return 1;
+    } else if (a.time_in_s < b.time_in_s) {
+        return -1;
+    }
+    return 0;
+}
+
 // login({email: FB_EMAIL, password: FB_PWD}, (err, api) => {
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
 	if(err) return console.error(err);
 	console.log( "Waiting for message\n" );
-	// map each person's name to their time in int (for sorting) and string (for printing)
-	// times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
-	var times = {};
 
 	api.listenMqtt((err, message) => {
         if (!message) {
@@ -62,10 +80,11 @@ function handleMessage(message, times, api) {
         console.log( "Nothing in this message...\n" );
         return;
     }
-    if( message.body == "/" )
+    if( message.body == "/times" )
     {
+        var threadID = message.threadID;
         console.log( "Request to show leaderboard\n" );
-        printLeaderboard();
+        printLeaderboard(threadID);
         return;
     }
 
@@ -103,6 +122,7 @@ function storeLeaderboard(message, times, api) {
         complete_str_to_send = name + " finished in " + time_in_s + " seconds."
         console.log(complete_str_to_send);
         api.sendMessage( { body: complete_str_to_send },  message.senderID);
+        updateTimes(message.senderID, name, time_in_s, time_str)
     });
 }
 
@@ -139,7 +159,21 @@ function timeParser(timeStr) {
     return minute*60 + second;
 }
 
-function printLeaderboard( times )
+function printLeaderboard(threadID)
 {
+    sortedTimes = []
+    for (var key in dictionary) {
+        value = times[key]
+        sortedTimes.push(value)
+    }
+    sortedTimes.sort(compareTimes);
+
+    leaderboardBody = ""
+    for (i = 0; i < sortedTimes.length; i++) {
+        singleTimeStr = '${i+1}. ${sortedTimes[i].name} @ ${sortedTimes[i].time_in_s}\n'
+        sortedTimes += single_time_str
+    }
+
+    api.sendMessage({body: leaderboardBody}, threadID)
 	return;
 }
