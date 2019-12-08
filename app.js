@@ -14,6 +14,7 @@
 
 const fs = require("fs");
 const login = require("facebook-chat-api");
+var schedule = require('node-schedule');
 
 // const FB_EMAIL = "normanmarsh916@outlook.com";
 // const FB_PWD = "~yKV*Mymy^nVd.9D-J&Wce3V";
@@ -46,6 +47,11 @@ function compareTimes(a, b) {
     }
     return 0;
 }
+
+// scheduler to clear times every minute
+var j = schedule.scheduleJob('* /1 * * * *', function(){
+      times = {}
+});
 
 // login({email: FB_EMAIL, password: FB_PWD}, (err, api) => {
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
@@ -117,16 +123,9 @@ function storeLeaderboard(message, times, api) {
             console.log( "Bad inputs\n" );
             return;
         }
-        // TODO: reinit times dict based on 20 hour period
-        complete_str_to_send = name + " finished in " + time_in_s + " seconds."
-        console.log(complete_str_to_send);
-        api.sendMessage( { body: complete_str_to_send },  message.senderID);
+
         updateTimes(message.senderID, name, time_in_s, time_str)
     });
-}
-
-function insert(str, index, value) {
-	return str.substr(0, index) + value + str.substr(index);
 }
 
 function getName( api, ID,  cb )
@@ -140,11 +139,8 @@ function getName( api, ID,  cb )
 			console.log( "Unknown sender\n");
 			name = "Unknown";
 		}
-
-		api.sendMessage( { body: ret[ID].name }, ID);
         cb(name)
 	});
-	// return name;
 }
 
 function timeParser(timeStr) {
