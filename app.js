@@ -37,10 +37,6 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 		if (!message || !message.body) {
             return;
 		}
-        if (!utils.validTime()) {
-            console.log( "Received invalid time\n");
-            return;
-        }
         console.log(message.body)
         handleMessage(message, api);
 	});
@@ -60,7 +56,10 @@ function handleMessage(message, api) {
         console.log( "Request to show help screen\n" );
         printHelpScreen( api, threadID );
     }
-
+    if (!utils.validTime()) {
+        console.log( "Received invalid time\n");
+        return;
+    }
     storeLeaderboard(message, api);
 }
 
