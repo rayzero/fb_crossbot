@@ -7,22 +7,26 @@ function insert(str, index, value) {
 function timeParser( messageBody )
 {	
 	var time_re = "^([0-9]*):([0-9]*)$";
-	var time_without_colon_re = "([0-9]*)";
+	var time_without_colon_re = "^([0-9]*)$";
 	var result = messageBody.match( time_re );
 	var result_without_colon = messageBody.match( time_without_colon_re );
 	var str_len = messageBody.length;
 	var colon_pos =  str_len - 2;
-	var total = 0;
+	// var total = 0;
+	var return_obj = {
+		'total': -1,
+		'time_str': messageBody
+	}
 
 	if ( !messageBody )
 	{
 		console.log( "Message body has no contents\n" );
-		return -1;
+		return return_obj;
 	}
 	if ( !result && !result_without_colon )
 	{
 		console.log( "Normal message\n" );
-		return -1;
+		return return_obj;
 	}
 	if ( !result )
 	{
@@ -37,26 +41,26 @@ function timeParser( messageBody )
 		if ( !seconds )
 		{
 			console.log( "Bad input\n" );
-			return total;
+			return return_obj;
 		}
 		seconds = parseInt( seconds );
 		if ( seconds > 60 )
 		{
 			console.log( "Bad input\n" );
-			return total;
+			return return_obj;
 		}
 		var minutes = result[result_len - 2];
 		if ( !minutes ) 
 		{
-			total = seconds;
+			return_obj['total'] = seconds;
 		}
 		else 
 		{
 			minutes = parseInt( minutes );
-			total = minutes * 60 + seconds;
+			return_obj['total'] = minutes * 60 + seconds;
 		}
 	}
-	return total;
+	return return_obj;
 }
 
 module.exports = 

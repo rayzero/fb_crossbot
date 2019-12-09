@@ -16,9 +16,7 @@ var time_parser = require('./time_parser.js');
 const fs = require("fs");
 const login = require("facebook-chat-api");
 var schedule = require('node-schedule');
-
-const FB_EMAIL = "normanmarsh916@outlook.com";
-const FB_PWD = "~yKV*Mymy^nVd.9D-J&Wce3V";
+var moment = require('moment');
 
 // map each person's name to their time in int (for sorting) and string (for printing)
 // times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
@@ -50,8 +48,9 @@ function compareTimes(a, b) {
 }
 
 // scheduler to clear times every minute
-var j = schedule.scheduleJob('* /1 * * * *', function(){
-      times = {}
+var j = schedule.scheduleJob('* 19 * * *', function(){
+    console.log("clearing time dictionary")
+    times = {}
 });
 
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
@@ -81,7 +80,8 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 // checks that we're within curday 7pm <-->curday+1 3pm so we can store a time
 function validTime() {
     // todo: write logic
-    return true;
+    hourOfDay = parseInt(moment().format('HH'))
+    return !(hourOfDay>=12 && hourOfDay<=19)
 }
 
 // handles different functions based off what messsage is read in
@@ -113,9 +113,11 @@ function storeLeaderboard(message, times, api) {
     var info = { };
 
     getName(api, message.senderID, (name) => {
-        time_in_s = time_parser.timeParser( message.body );
+        parsed_time = time_parser.timeParser( message.body );
+        time_in_s = parsed_time['total']
+
         if ( time_in_s == -1 )return;
-        time_str = message.body;
+        time_str = parsed_time['time_str']
         console.log(time_in_s)
         console.log(name)
         console.log(time_str)
