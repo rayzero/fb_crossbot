@@ -34,18 +34,13 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
     });
 
 	api.listenMqtt((err, message) => {
-        if (!message) {
-            return
-        }
-
+		if (!message || !message.body) {
+            return;
+		}
         if (!utils.validTime()) {
             console.log( "Received invalid time\n");
             return;
         }
-
-		if (!message || !message.body) {
-            return;
-		}
         console.log(message.body)
         handleMessage(message, api);
 	});
