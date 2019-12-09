@@ -9,7 +9,7 @@ var utils = require('./utils.js');
 // map each person's name to their time in int (for sorting) and string (for printing)
 // times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
 var LEADERBOARD = {};
-var GROUP_CHAT_ID = 3062775780417171;
+var GROUP_CHAT_ID = 2046477035465947;
 
 function updateTimes(id, name, time_in_s, time_str) {
     LEADERBOARD[id] = {
@@ -35,7 +35,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
             return
         }
 
-        if (!util.validTime()) {
+        if (!utils.validTime()) {
             console.log( "Received invalid time\n");
             return;
         }
@@ -43,7 +43,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 		if (!message || !message.body) {
             return;
 		}
-
+        console.log(message.body)
         handleMessage(message, api);
 	});
 });

@@ -24,7 +24,7 @@ function generateLeaderboardString(sortedTimes) {
     console.log( singleTimeStr );
         leaderboardBody += singleTimeStr
     }
-    disclaimer = "Scoreboard closes at noon Pacific Time, and opens for the next day at 7pm."
+    disclaimer = "\nScoreboard closes at noon Pacific Time, and opens for the next day at 7pm."
     leaderboardBody += disclaimer
 
     return leaderboardBody
