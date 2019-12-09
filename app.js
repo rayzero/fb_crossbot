@@ -50,12 +50,17 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 
 // handles different functions based off what messsage is read in
 function handleMessage(message, api) {
+    var threadID = message.threadID;
     if( message.body == "/times" )
     {
-        var threadID = message.threadID;
         console.log( "Request to show leaderboard\n" );
         printLeaderboard(api, threadID);
         return;
+    }
+    else if ( message.body == "/help" )
+    {
+        console.log( "Request to show help screen\n" );
+        printHelpScreen( api, threadID );
     }
 
     storeLeaderboard(message, api);
@@ -112,4 +117,20 @@ function printLeaderboard( api, threadID )
 
     api.sendMessage({body: leaderboardBody}, threadID)
 	return;
+}
+
+function printHelpScreen( api, threadID )
+{
+    help_string = "General Rules\n \
+    - Post a message with only your time between 12pmPST - 7pmPST to record it\n \
+    - You can update your time in case of a mistake\n \
+    - Type '/times' to view the current leaderboard\n\n \
+    Example inputs:\n \
+    '123' --> valid\n \
+    '1:23' --> valid\n \
+    ':23' --> valid\n \
+    '23' --> valid\n \
+    '123 bad' --> invalid\n";
+    api.sendMessage({body: help_string}, threadID);
+
 }
