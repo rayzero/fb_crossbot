@@ -12,21 +12,11 @@ function timeParser( messageBody )
 	var result_without_colon = messageBody.match( time_without_colon_re );
 	var str_len = messageBody.length;
 	var colon_pos =  str_len - 2;
-	// var total = 0;
-	var return_obj = {
-		'total': -1,
-		'time_str': messageBody
-	}
-
-	if ( !messageBody )
-	{
-		console.log( "Message body has no contents\n" );
-		return return_obj;
-	}
+	var total = -1;
+	
 	if ( !result && !result_without_colon )
 	{
-		console.log( "Normal message\n" );
-		return return_obj;
+		return total;
 	}
 	if ( !result )
 	{
@@ -40,34 +30,28 @@ function timeParser( messageBody )
 		console.log( "seconds: " + seconds );
 		if ( !seconds )
 		{
-			console.log( "Bad input\n" );
-			return return_obj;
+			console.log( "Bad input - 1\n" );
+			return total;
 		}
 		seconds = parseInt( seconds );
 		if ( seconds > 60 )
 		{
-			console.log( "Bad input\n" );
-			return return_obj;
+			console.log( "Bad input - 2\n" );
+			return total;
 		}
 		var minutes = result[result_len - 2];
 		if ( !minutes ) 
 		{
-			return_obj['total'] = seconds;
+			total = seconds;
 		}
 		else 
 		{
 			minutes = parseInt( minutes );
-			return_obj['total'] = minutes * 60 + seconds;
+			total = minutes * 60 + seconds;
 		}
 	}
-	return return_obj;
+	return total;
 }
-
-module.exports = 
-{
-	timeParser: timeParser
-}
-
 
 function timeToString( seconds )
 {
@@ -75,7 +59,14 @@ function timeToString( seconds )
 	var date = new Date(seconds * 1000);
 	var mm = date.getUTCMinutes();
 	var ss = date.getSeconds();
-	if (mm < 10) {mm = "0"+mm;}
 	if (ss < 10) {ss = "0"+ss;}
 	return mm+":"+ss;
 }
+
+module.exports = 
+{
+	timeParser: timeParser,
+	timeToString: timeToString
+}
+
+

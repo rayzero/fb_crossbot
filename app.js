@@ -1,8 +1,10 @@
-var time_parser = require('./time_parser.js');
 const fs = require("fs");
 const login = require("facebook-chat-api");
 var schedule = require('node-schedule');
-var moment = require('moment');
+
+var time_parser = require('./time_parser.js');
+var utils = require('./utils.js');
+
 
 // map each person's name to their time in int (for sorting) and string (for printing)
 // times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
@@ -15,15 +17,6 @@ function updateTimes(id, name, time_in_s, time_str) {
         'time_in_s': time_in_s,
         'time_str': time_str
     }
-}
-
-function compareTimes(a, b) {
-    if (a.time_in_s > b.time_in_s) {
-        return 1;
-    } else if (a.time_in_s < b.time_in_s) {
-        return -1;
-    }
-    return 0;
 }
 
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
@@ -41,15 +34,13 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
         if (!message) {
             return
         }
-		console.log( "Received a message\n" );
 
-        if (!validTime()) {
+        if (!util.validTime()) {
             console.log( "Received invalid time\n");
             return;
         }
 
 		if (!message || !message.body) {
-            console.log( "Received unable to parse message or message body\n");
             return;
 		}
 
@@ -57,23 +48,8 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 	});
 });
 
-// checks that we're within curday 7pm <-->curday+1 3pm so we can store a time
-function validTime() {
-    // todo: write logic
-    hourOfDay = parseInt(moment().format('HH'))
-    return !(hourOfDay>=12 && hourOfDay<=19)
-}
-
 // handles different functions based off what messsage is read in
 function handleMessage(message, api) {
-    console.log( "Sending from: " + message.senderID);
-    console.log( "Message body: " + message.body );
-
-    if ( !message.body )
-    {
-        console.log( "Nothing in this message...\n" );
-        return;
-    }
     if( message.body == "/times" )
     {
         var threadID = message.threadID;
@@ -93,17 +69,16 @@ function storeLeaderboard(message, api) {
     var info = { };
 
     getName(api, message.senderID, (name) => {
-        parsed_time = time_parser.timeParser( message.body );
-        time_in_s = parsed_time['total']
+        time_in_s = time_parser.timeParser( message.body );
 
         if ( time_in_s == -1 )return;
-        time_str = parsed_time['time_str']
+        time_str = time_parser.timeToString(time_in_s)
         console.log(time_in_s)
         console.log(name)
         console.log(time_str)
 
         if ( !name || !time_in_s || !time_str ) {
-            console.log( "Bad inputs\n" );
+            console.log( "storeLeaderboard::Bad inputs\n" );
             return;
         }
 
@@ -117,9 +92,8 @@ function getName( api, ID,  cb )
 	api.getUserInfo([ID], (err, ret) => {
 		if(err) return console.error(err);
 		name = ret[ID].name;
-		console.log( "Found name: "+name );
 		if ( !name ) {
-			console.log( "Unknown sender\n");
+			console.log( "getName::Unknown sender\n");
 			name = "Unknown";
 		}
         cb(name)
@@ -128,24 +102,13 @@ function getName( api, ID,  cb )
 
 function printLeaderboard( api, threadID )
 {
-    console.log( "times:" )
     sortedTimes = []
     for (var key in LEADERBOARD) {
         value = LEADERBOARD[key]
         sortedTimes.push(value)
     }
-    console.log( "sortedTimes:" )
-    sortedTimes.sort(compareTimes);
-    console.log( "sorted times length " + sortedTimes.length );
-
-    leaderboardBody = ""
-    for (i = 0; i < sortedTimes.length; i++) {
-        singleTimeStr = (i+1) + '. ' + sortedTimes[i].name +' @ ' + sortedTimes[i].time_str + '\n'
-	console.log( singleTimeStr );
-        leaderboardBody += singleTimeStr
-    }
-    disclaimer = "Scoreboard closes at noon Pacific Time, and opens for the next day at 7pm."
-    leaderboardBody += disclaimer
+    sortedTimes.sort(utils.compareTimes);
+    leaderboardBody = utils.generateLeaderboardString(sortedTimes)
 
     api.sendMessage({body: leaderboardBody}, threadID)
 	return;
