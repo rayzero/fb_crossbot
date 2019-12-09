@@ -57,8 +57,10 @@ function timeToString( seconds )
 {
 	// Date uses MS
 	var date = new Date(seconds * 1000);
+	var hh = date.getUTCHours();
 	var mm = date.getUTCMinutes();
 	var ss = date.getSeconds();
+	if (hh > 0) mm += hh * 60;
 	if (ss < 10) {ss = "0"+ss;}
 	return mm+":"+ss;
 }
