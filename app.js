@@ -1,18 +1,4 @@
-
-// ^(?:([0-9]*):)?([0-9]*)$
-
-
-// api.listen( ( err, message ) => callback )
-// api.sendMessage( { <contents> }, threadID }
-// api.getUserInfo( [ids], ( err, ret ) => callback )
-//		name = ret[id].name
-
-// other idea:
-// mention the current leader in the write thread
-
-// sanitize input
 var time_parser = require('./time_parser.js');
-
 const fs = require("fs");
 const login = require("facebook-chat-api");
 var schedule = require('node-schedule');
@@ -20,18 +6,11 @@ var moment = require('moment');
 
 // map each person's name to their time in int (for sorting) and string (for printing)
 // times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
-var times = {};
-
-function print_dict( dict )
-{
-   for( var key in dict )
-   {
-     console.log( key + ': ' + dict[key]+'\n');
-   }
-}
+var LEADERBOARD = {};
+var GROUP_CHAT_ID = 3062775780417171;
 
 function updateTimes(id, name, time_in_s, time_str) {
-    times[id] = {
+    LEADERBOARD[id] = {
         'name': name,
         'time_in_s': time_in_s,
         'time_str': time_str
@@ -47,15 +26,16 @@ function compareTimes(a, b) {
     return 0;
 }
 
-// scheduler to clear times every minute
-var j = schedule.scheduleJob('* 19 * * *', function(){
-    console.log("clearing time dictionary")
-    times = {}
-});
-
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
 	if(err) return console.error(err);
 	console.log( "Waiting for message\n" );
+
+    // scheduler to clear times every minute
+    var j = schedule.scheduleJob('* 12 * * *', function(){
+        console.log("clearing time dictionary")
+        printLeaderboard(api, GROUP_CHAT_ID)
+        LEADERBOARD = {}
+    });
 
 	api.listenMqtt((err, message) => {
         if (!message) {
@@ -73,7 +53,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
             return;
 		}
 
-        handleMessage(message, times, api);
+        handleMessage(message, api);
 	});
 });
 
@@ -85,7 +65,7 @@ function validTime() {
 }
 
 // handles different functions based off what messsage is read in
-function handleMessage(message, times, api) {
+function handleMessage(message, api) {
     console.log( "Sending from: " + message.senderID);
     console.log( "Message body: " + message.body );
 
@@ -102,11 +82,11 @@ function handleMessage(message, times, api) {
         return;
     }
 
-    storeLeaderboard(message, times, api);
+    storeLeaderboard(message, api);
 }
 
 // attempts to parse message into a time and store into our leaderboard object
-function storeLeaderboard(message, times, api) {
+function storeLeaderboard(message, api) {
     var name = "";
     var time_in_s = 0;
     var time_str = "";
@@ -149,10 +129,9 @@ function getName( api, ID,  cb )
 function printLeaderboard( api, threadID )
 {
     console.log( "times:" )
-    print_dict( times );
     sortedTimes = []
-    for (var key in times) {
-        value = times[key]
+    for (var key in LEADERBOARD) {
+        value = LEADERBOARD[key]
         sortedTimes.push(value)
     }
     console.log( "sortedTimes:" )
@@ -165,6 +144,8 @@ function printLeaderboard( api, threadID )
 	console.log( singleTimeStr );
         leaderboardBody += singleTimeStr
     }
+    disclaimer = "Scoreboard closes at noon Pacific Time, and opens for the next day at 7pm."
+    leaderboardBody += disclaimer
 
     api.sendMessage({body: leaderboardBody}, threadID)
 	return;
