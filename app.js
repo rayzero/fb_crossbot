@@ -11,13 +11,14 @@
 // mention the current leader in the write thread
 
 // sanitize input
+var time_parser = require('./time_parser.js');
 
 const fs = require("fs");
 const login = require("facebook-chat-api");
 var schedule = require('node-schedule');
 
-// const FB_EMAIL = "normanmarsh916@outlook.com";
-// const FB_PWD = "~yKV*Mymy^nVd.9D-J&Wce3V";
+const FB_EMAIL = "normanmarsh916@outlook.com";
+const FB_PWD = "~yKV*Mymy^nVd.9D-J&Wce3V";
 
 // map each person's name to their time in int (for sorting) and string (for printing)
 // times = { <name>: { time_in_s: <seconds>, time_str: <str_to_print> }, <name2>: { time_in_s: <seconds>, time_str: <str_to_print> }, .. ]
@@ -53,7 +54,6 @@ var j = schedule.scheduleJob('* /1 * * * *', function(){
       times = {}
 });
 
-// login({email: FB_EMAIL, password: FB_PWD}, (err, api) => {
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
 	if(err) return console.error(err);
 	console.log( "Waiting for message\n" );
@@ -113,7 +113,8 @@ function storeLeaderboard(message, times, api) {
     var info = { };
 
     getName(api, message.senderID, (name) => {
-        time_in_s = timeParser( message.body );
+        time_in_s = time_parser.timeParser( message.body );
+        if ( time_in_s == -1 )return;
         time_str = message.body;
         console.log(time_in_s)
         console.log(name)
@@ -141,17 +142,6 @@ function getName( api, ID,  cb )
 		}
         cb(name)
 	});
-}
-
-function timeParser(timeStr) {
-    pieces = timeStr.split(':')
-    var minute, second;
-
-    if(pieces.length === 2) {
-        minute = parseInt(pieces[0], 10);
-        second = parseInt(pieces[1], 10);
-    }
-    return minute*60 + second;
 }
 
 function printLeaderboard( api, threadID )
