@@ -23,10 +23,13 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 	if(err) return console.error(err);
 	console.log( "Waiting for message\n" );
 
-    // scheduler to clear times every minute
-    var j = schedule.scheduleJob('* 12 * * *', function(){
-        console.log("clearing time dictionary")
+    // scheduler to print times at leaderboard close
+    var leaderboardClosed = schedule.scheduleJob('0 12 * * *', function(){
         printLeaderboard(api, GROUP_CHAT_ID)
+    });
+    // scheduler to clear leaderboard for leaderboard opens again
+    var leaderboardClear = schedule.scheduleJob('59 6 * * *', function(){
+        console.log("clearing time dictionary")
         LEADERBOARD = {}
     });
 
