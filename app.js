@@ -26,9 +26,6 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
     // scheduler to print times at leaderboard close
     var leaderboardClosed = schedule.scheduleJob('0 12 * * *', function(){
         printLeaderboard(api, GROUP_CHAT_ID)
-    });
-    // scheduler to clear leaderboard for leaderboard opens again
-    var leaderboardClear = schedule.scheduleJob('59 6 * * *', function(){
         console.log("clearing time dictionary")
         LEADERBOARD = {}
     });
@@ -55,6 +52,10 @@ function handleMessage(message, api) {
     {
         console.log( "Request to show help screen\n" );
         printHelpScreen( api, threadID );
+    } else if ((message.body).toLowerCase() == "dnf") {
+        getName(api, message.senderID, (name) => {
+            updateTimes(message.senderID, name, Number.MAX_SAFE_INTEGER, "dnf") 
+        }
     }
     if (!utils.validTime()) {
         console.log( "Received invalid time\n");
