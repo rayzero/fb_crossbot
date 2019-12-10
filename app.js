@@ -55,7 +55,7 @@ function handleMessage(message, api) {
     } else if ((message.body).toLowerCase() == "dnf") {
         getName(api, message.senderID, (name) => {
             updateTimes(message.senderID, name, Number.MAX_SAFE_INTEGER, "dnf") 
-        }
+        })
     }
     if (!utils.validTime()) {
         console.log( "Received invalid time\n");
