@@ -21,6 +21,12 @@ function updateTimes(id, name, time_in_s, time_str) {
 
 login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, api) => {
 	if(err) return console.error(err);
+
+    // restore leaderboard if valid time
+    if (utils.validTime()) {
+        LEADERBOARD = JSON.parse(fs.readFileSync('leaderboard.json', 'utf8'))
+    }
+
 	console.log( "Waiting for message\n" );
 
     // scheduler to print times at leaderboard close
@@ -38,6 +44,14 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
         handleMessage(message, api);
 	});
 });
+
+['exit', 'SIGINT', 'SIGUSR1', 'SIGUSR2', 'uncaughtException', 'SIGTERM'].forEach((eventType) => {
+    process.on(eventType, onExit);
+})
+
+function onExit() {
+    fs.writeFileSync("leaderboard.json", JSON.stringify(LEADERBOARD))
+}
 
 // handles different functions based off what messsage is read in
 function handleMessage(message, api) {
