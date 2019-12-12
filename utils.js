@@ -1,4 +1,5 @@
 var moment = require('moment');
+var tz = require('moment-timezone');
 
 
 function compareTimes(a, b) {
@@ -13,8 +14,8 @@ function compareTimes(a, b) {
 // checks that we're within curday 7pm <-->curday+1 3pm so we can store a time
 function validTime() {
     // todo: write logic
-    hourOfDay = parseInt(moment().format('HH'))
-    return !(hourOfDay>=12 && hourOfDay<=19)
+    hourOfDay = parseInt(moment().tz('America/Los_Angeles').format('HH'))
+    return !(hourOfDay>=12 && hourOfDay<19)
 }
 
 function generateLeaderboardString(sortedTimes) {
