@@ -30,7 +30,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 	console.log( "Waiting for message\n" );
 
     // scheduler to print times at leaderboard close
-    var leaderboardClosed = schedule.scheduleJob(rule:'* 12 * * *', tz:'America/Los_Angeles'}, function(){
+    var leaderboardClosed = schedule.scheduleJob({rule:'* 12 * * *', tz:'America/Los_Angeles'}, function(){
         printLeaderboard(api, GROUP_CHAT_ID)
         console.log("clearing time dictionary")
         LEADERBOARD = {}
