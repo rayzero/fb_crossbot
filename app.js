@@ -24,7 +24,11 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 
     // restore leaderboard if valid time
     if (utils.validTime()) {
-        LEADERBOARD = JSON.parse(fs.readFileSync('leaderboard.json', 'utf8'))
+        try {
+            LEADERBOARD = JSON.parse(fs.readFileSync('leaderboard.json', 'utf8'))
+        } catch(err) {
+            LEADERBOARD = {}
+        }
     }
 
 	console.log( "Waiting for message\n" );
