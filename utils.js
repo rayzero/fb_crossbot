@@ -14,8 +14,13 @@ function compareTimes(a, b) {
 // checks that we're within curday 7pm <-->curday+1 3pm so we can store a time
 function validTime() {
     // todo: write logic
-    hourOfDay = parseInt(moment().tz('America/Los_Angeles').format('HH'))
-    return !(hourOfDay>=12 && hourOfDay<19)
+    curTime = moment().tz('America/Los_Angeles')
+    hourOfDay = parseInt(curTime.format('HH'))
+    startHour = 19
+    if (curTime.days() == 6 || curTime.days() == 7) {
+        startHour = 15
+    }
+    return !(hourOfDay>=12 && hourOfDay<startHour)
 }
 
 function generateLeaderboardString(sortedTimes) {
@@ -31,7 +36,7 @@ function generateLeaderboardString(sortedTimes) {
     return leaderboardBody
 }
 
-module.exports = 
+module.exports =
 {
 	compareTimes: compareTimes,
 	validTime: validTime,

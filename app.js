@@ -34,7 +34,7 @@ login({appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8'))}, (err, ap
 	console.log( "Waiting for message\n" );
 
     // scheduler to print times at leaderboard close
-    var leaderboardClosed = schedule.scheduleJob({rule:'* 12 * * *', tz:'America/Los_Angeles'}, function(){
+    var leaderboardClosed = schedule.scheduleJob({rule:'0 12 * * *', tz:'America/Los_Angeles'}, function(){
         printLeaderboard(api, GROUP_CHAT_ID)
         console.log("clearing time dictionary")
         LEADERBOARD = {}
@@ -72,7 +72,7 @@ function handleMessage(message, api) {
         printHelpScreen( api, threadID );
     } else if ((message.body).toLowerCase() == "dnf") {
         getName(api, message.senderID, (name) => {
-            updateTimes(message.senderID, name, Number.MAX_SAFE_INTEGER, "dnf") 
+            updateTimes(message.senderID, name, Number.MAX_SAFE_INTEGER, "dnf")
         })
     }
     if (!utils.validTime()) {
